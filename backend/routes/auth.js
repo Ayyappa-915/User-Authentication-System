@@ -5,7 +5,6 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import User from "../models/User.js";
 import transporter from "../config/email.js";
-import { verifyToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 const SECRET = "mysecretkey";
@@ -25,7 +24,7 @@ router.post("/register", (req, res) => {
 
   User.findOne({ username })
     .then(existing => {
-      if (existing) return res.status(400).json({ msg: "User exists" });
+      if (existing) return res.status(400).json({ msg: "User already exists" });
       return bcrypt.hash(password, 10);
     })
     .then(hashed => {
@@ -42,32 +41,45 @@ router.post("/register", (req, res) => {
           to: username,
           from: "c.sec.balls@gmail.com",
           subject: "Verify Your Email",
-          html: `<p>Click <a href="${link}">here</a> to verify</p>`
+          html: `<p>Click <a href="${link}">here</a> to verify your email.</p>`
         });
-        res.json({ msg: "Registered. Check email for verification." });
+        res.json({ msg: "Registered successfully. Check your email for verification." });
       });
     })
-    .catch(() => res.status(500).json({ msg: "Server error" }));
+    .catch(err => {
+      console.error("❌ Register Error:", err);
+      res.status(500).json({ msg: "Server error" });
+    });
 });
 
-// Email verification
+// ✅ Updated Email Verification Route (JSON Response)
 router.get("/verify-email", (req, res) => {
   const { token } = req.query;
+  console.log("🔍 Verifying email with token:", token);
+
+  if (!token) {
+    return res.status(400).json({ msg: "Missing token" });
+  }
 
   User.findOne({
     verifyToken: token,
     verifyTokenExpiry: { $gt: Date.now() }
   })
     .then(user => {
-      if (!user) return res.status(400).send("Invalid or expired token");
+      if (!user) return res.status(400).json({ msg: "Invalid or expired token" });
+
       user.isVerified = true;
       user.verifyToken = undefined;
       user.verifyTokenExpiry = undefined;
+
       return user.save().then(() =>
-        res.send(`<h3>Email verified. <a href="/index.html">Login</a></h3>`)
+        res.json({ msg: "Email verified successfully" })
       );
     })
-    .catch(() => res.status(500).send("Verification failed"));
+    .catch(err => {
+      console.error("❌ Verification Error:", err);
+      res.status(500).json({ msg: "Verification failed due to server error" });
+    });
 });
 
 // Login
@@ -82,20 +94,22 @@ router.post("/login", (req, res) => {
       bcrypt.compare(password, user.password).then(match => {
         if (!match) return res.status(400).json({ msg: "Invalid credentials" });
 
-        // ⬇️ Include username in JWT payload
         const token = jwt.sign({ id: user._id, username: user.username }, SECRET, { expiresIn: "1h" });
         res.json({ token });
       });
     })
-    .catch(() => res.status(500).json({ msg: "Login error" }));
+    .catch(err => {
+      console.error("❌ Login Error:", err);
+      res.status(500).json({ msg: "Login failed" });
+    });
 });
 
-// Forgot password
+// Forgot Password
 router.post("/forgot-password", (req, res) => {
   const { username } = req.body;
   const token = crypto.randomBytes(32).toString("hex");
 
-  console.log("📨 Forgot password for:", username);
+  console.log("📨 Forgot password request for:", username);
 
   User.findOne({ username: { $regex: new RegExp(`^${username}$`, "i") } })
     .then(user => {
@@ -110,10 +124,10 @@ router.post("/forgot-password", (req, res) => {
         transporter.sendMail({
           to: user.username,
           from: "c.sec.balls@gmail.com",
-          subject: "Reset Password",
-          html: `<p><a href="${link}">Reset Password</a></p>`
+          subject: "Reset Your Password",
+          html: `<p><a href="${link}">Click here</a> to reset your password.</p>`
         });
-        res.json({ msg: "Reset email sent. Check your inbox." });
+        res.json({ msg: "Reset password link sent to your email." });
       });
     })
     .catch(err => {
@@ -122,7 +136,7 @@ router.post("/forgot-password", (req, res) => {
     });
 });
 
-// Reset password
+// Reset Password
 router.post("/reset-password", (req, res) => {
   const { token, newPassword } = req.body;
 
@@ -133,14 +147,21 @@ router.post("/reset-password", (req, res) => {
   User.findOne({ resetToken: token, tokenExpiry: { $gt: Date.now() } })
     .then(user => {
       if (!user) return res.status(400).json({ msg: "Token expired or invalid" });
+
       return bcrypt.hash(newPassword, 10).then(hashed => {
         user.password = hashed;
         user.resetToken = undefined;
         user.tokenExpiry = undefined;
-        return user.save().then(() => res.json({ msg: "Password reset success" }));
+
+        return user.save().then(() =>
+          res.json({ msg: "Password reset successful" })
+        );
       });
     })
-    .catch(() => res.status(500).json({ msg: "Reset failed" }));
+    .catch(err => {
+      console.error("❌ Reset Password Error:", err);
+      res.status(500).json({ msg: "Reset failed" });
+    });
 });
 
 export default router;
