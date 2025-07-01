@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 0;
+    }
+
+    .header {
+      background: #00796b;
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      margin: 0;
+    }
+#username
+{
+    color: greenyellow;
+}
+    .logout-btn {
+      padding: 10px 20px;
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover {
+      background-color: #d32f2f;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .container h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .container p {
+      font-size: 16px;
+      color: #555;
+    }
+
+    .hacker-image {
+  width: 300px;
+  max-width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Welcome, <span id="username">User</span></h1>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="container">
+  <img src="https://t3.ftcdn.net/jpg/05/56/29/10/360_F_556291020_q2ieMiOCKYbtoLITrnt7qcSL1LJYyWrU.jpg" alt="Hacker" class="hacker-image" />
+  <h1>User Authentication System</h1>
+</div>
+
+
+  <script>
+    // Get token
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (!token) {
+      location.href = "index.html"; // Redirect to login if no token
+    }
+
+    // Decode token to get username
+    function parseJwt(token) {
+      try {
+        return JSON.parse(atob(token.split('.')[1]));
+      } catch (e) {
+        return null;
+      }
+    }
+
+    const payload = parseJwt(token);
+    if (payload && payload.username) {
+      document.getElementById("username").textContent = payload.username;
+    } else {
+      document.getElementById("username").textContent = "User";
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      sessionStorage.removeItem("token");
+      location.href = "index.html";
+    }
+  </script>
+</body>
+</html>

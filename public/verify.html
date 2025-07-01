@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Email Verification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #388E3C;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Email Verification</h2>
+    <p id="message">Verifying...</p>
+    <button onclick="location.href='index.html'">Go to Login</button>
+  </div>
+
+  <script>
+    const token = new URLSearchParams(window.location.search).get("token");
+    const message = document.getElementById("message");
+
+    if (!token) {
+      message.textContent = "Missing token";
+    } else {
+      fetch(`/api/auth/verify-email?token=${token}`)
+        .then(res => res.json().then(data => ({ ok: res.ok, data })))
+        .then(({ ok, data }) => {
+          message.textContent = ok ? "✅ " + data.msg : "❌ " + data.msg;
+        })
+        .catch(err => {
+          console.error("Verification failed:", err);
+          message.textContent = "⚠️ Verification failed due to a server error.";
+        });
+    }
+  </script>
+</body>
+</html>

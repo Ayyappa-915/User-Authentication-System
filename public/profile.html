@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Profile</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f1f1;
+      padding: 40px;
+    }
+    .container {
+      background: white;
+      max-width: 500px;
+      margin: auto;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    p {
+      font-size: 16px;
+      color: #333;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display: block;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #1976D2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Profile</h2>
+    <p><strong>Email:</strong> <span id="email"></span></p>
+    <p><strong>Status:</strong> <span id="status">Loading...</span></p>
+    <button onclick="location.href='dashboard.html'">Back to Dashboard</button>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (!token) location.href = "index.html";
+
+    fetch("/api/auth/profile", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json().then(data => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        if (!ok) return alert(data.msg);
+        document.getElementById("email").textContent = data.username;
+        document.getElementById("status").textContent = data.verified ? "Verified" : "Not Verified";
+      });
+  </script>
+</body>
+</html>
