@@ -37,7 +37,7 @@ router.post("/register", (req, res) => {
         verifyTokenExpiry: Date.now() + 3600000
       });
       return newUser.save().then(() => {
-        const link = `https://authentication-r4mc.onrender.com/verify.html?token=${token}`;
+        const link = `https://user-authentication-system-1-jlq3.onrender.com/verify.html?token=${token}`;
         transporter.sendMail({
           to: username,
           from: "c.sec.balls@gmail.com",
@@ -106,7 +106,7 @@ router.post("/forgot-password", (req, res) => {
       user.tokenExpiry = Date.now() + 3600000;
 
       return user.save().then(() => {
-        const link = `https://authentication-r4mc.onrender.com/reset-password.html?token=${token}`;
+        const link = `https://user-authentication-system-1-jlq3.onrender.com/reset-password.html?token=${token}`;
         transporter.sendMail({
           to: user.username,
           from: "c.sec.balls@gmail.com",
